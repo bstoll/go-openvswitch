@@ -461,6 +461,39 @@ func TestClientVSwitchGetBridgeProtocolsOK(t *testing.T) {
 	}
 }
 
+func TestClientVSwitchSetBridgeHwaddrOK(t *testing.T) {
+	const bridge = "br0"
+	hwaddr := "08:4A:5F:2C:19:64"
+
+	c := testClient([]OptionFunc{Timeout(1)}, func(cmd string, args ...string) ([]byte, error) {
+		if want, got := "ovs-vsctl", cmd; want != got {
+			t.Fatalf("incorrect command:\n- want: %v\n-  got: %v",
+				want, got)
+		}
+
+		wantArgs := []string{
+			"--timeout=1",
+			"set",
+			"bridge",
+			bridge,
+			fmt.Sprintf("other-config:hwaddr=\"%s\"", hwaddr),
+		}
+		if want, got := wantArgs, args; !reflect.DeepEqual(want, got) {
+			t.Fatalf("incorrect arguments\n- want: %v\n-  got: %v",
+				want, got)
+		}
+
+		return nil, nil
+	})
+
+	err := c.VSwitch.Set.Bridge(bridge, BridgeOptions{
+		Hwaddr: hwaddr,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error for Client.VSwitch.Set.Bridge: %v", err)
+	}
+}
+
 func TestClientVSwitchSetBridgeProtocolsOK(t *testing.T) {
 	const bridge = "br0"
 	protocols := []string{
@@ -747,6 +780,24 @@ func TestBridgeOptions_slice(t *testing.T) {
 				},
 			},
 			out: []string{"protocols=OpenFlow10,OpenFlow11,OpenFlow12,OpenFlow13,OpenFlow14,OpenFlow15"},
+		},
+		{
+			desc: "only hwaddr",
+			o: BridgeOptions{
+				Hwaddr: "02:00:00:00:00:01",
+			},
+			out: []string{"other-config:hwaddr=\"02:00:00:00:00:01\""},
+		},
+		{
+			desc: "protocols and hwaddr",
+			o: BridgeOptions{
+				Hwaddr: "A2:5C:43:18:9F:4C",
+				Protocols: []string{
+					ProtocolOpenFlow14,
+					ProtocolOpenFlow15,
+				},
+			},
+			out: []string{"protocols=OpenFlow14,OpenFlow15", "other-config:hwaddr=\"A2:5C:43:18:9F:4C\""},
 		},
 	}
 
