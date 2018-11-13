@@ -17,6 +17,7 @@ package ovs
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -177,6 +178,22 @@ func (v *VSwitchGetService) Bridge(bridge string) (BridgeOptions, error) {
 	return BridgeOptions{
 		Protocols: protocols,
 	}, nil
+}
+
+// PortID gets OVS port ID for a given textual port name.
+func (v *VSwitchGetService) PortID(portName string) (int, error) {
+	args := []string{"get", "interface", portName, "ofport"}
+	out, err := v.v.exec(args...)
+	if err != nil {
+		return 0, err
+	}
+
+	portID, err := strconv.Atoi(string(out))
+	if err != nil {
+		return 0, err
+	}
+
+	return portID, nil
 }
 
 // A VSwitchSetService is used in a VSwitchService to execute 'ovs-vsctl set'

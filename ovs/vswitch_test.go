@@ -461,6 +461,41 @@ func TestClientVSwitchGetBridgeProtocolsOK(t *testing.T) {
 	}
 }
 
+func TestClientVSwitchGetPortIDOK(t *testing.T) {
+	const port = "eth0"
+	portID := 1
+
+	c := testClient([]OptionFunc{Timeout(1)}, func(cmd string, args ...string) ([]byte, error) {
+		if want, got := "ovs-vsctl", cmd; want != got {
+			t.Fatalf("incorrect command:\n- want: %v\n-  got: %v",
+				want, got)
+		}
+
+		wantArgs := []string{
+			"--timeout=1",
+			"get",
+			"interface",
+			port,
+			"ofport",
+		}
+		if want, got := wantArgs, args; !reflect.DeepEqual(want, got) {
+			t.Fatalf("incorrect arguments\n- want: %v\n-  got: %v",
+				want, got)
+		}
+
+		return []byte(fmt.Sprintln(portID)), nil
+	})
+
+	got, err := c.VSwitch.Get.PortID(port)
+	if err != nil {
+		t.Fatalf("unexpected error for Client.VSwitch.Get.PortID: %v", err)
+	}
+
+	if got != portID {
+		t.Fatalf("unexpected protocols for Client.VSwitch.Get.PortID: %v", got)
+	}
+}
+
 func TestClientVSwitchSetBridgeHwaddrOK(t *testing.T) {
 	const bridge = "br0"
 	hwaddr := "08:4A:5F:2C:19:64"
