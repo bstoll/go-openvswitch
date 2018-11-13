@@ -48,6 +48,10 @@ func TestActionConstants(t *testing.T) {
 			a:   StripVLAN(),
 			out: "strip_vlan",
 		},
+		{
+			a:   DecTTL(),
+			out: "dec_ttl",
+		},
 	}
 
 	for _, tt := range tests {
@@ -599,6 +603,10 @@ func TestActionGoString(t *testing.T) {
 		{
 			a: StripVLAN(),
 			s: `ovs.StripVLAN()`,
+		},
+		{
+			a: DecTTL(),
+			s: `ovs.DecTTL()`,
 		},
 		{
 			a: ConnectionTracking("commit"),
