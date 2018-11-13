@@ -60,6 +60,7 @@ const (
 	actionLocal     = "local"
 	actionNormal    = "normal"
 	actionStripVLAN = "strip_vlan"
+	actionDecTTL    = "dec_ttl"
 )
 
 // An Action is a type which can be marshaled into an OpenFlow action. Actions can be
@@ -96,6 +97,8 @@ func (a *textAction) GoString() string {
 		return "ovs.Normal()"
 	case actionStripVLAN:
 		return "ovs.StripVLAN()"
+	case actionDecTTL:
+		return "ovs.DecTTL()"
 	default:
 		return fmt.Sprintf("// BUG(mdlayher): unimplemented OVS text action: %q", a.action)
 	}
@@ -143,6 +146,13 @@ func Normal() Action {
 func StripVLAN() Action {
 	return &textAction{
 		action: actionStripVLAN,
+	}
+}
+
+// DecTTL decrements the TTL of a packet.
+func DecTTL() Action {
+	return &textAction{
+		action: actionDecTTL,
 	}
 }
 
