@@ -428,6 +428,55 @@ func TestActionResubmitPort(t *testing.T) {
 	}
 }
 
+func TestActionMove(t *testing.T) {
+	var tests = []struct {
+		desc   string
+		a      Action
+		action string
+		err    error
+	}{
+		{
+			desc: "set field both empty",
+			a:    Move("", ""),
+			err:  errMoveFieldZero,
+		},
+		{
+			desc: "src field both empty",
+			a:    Move("", "NXM_OF_ARP_TPA[]"),
+			err:  errMoveFieldZero,
+		},
+		{
+			desc: "dst field both empty",
+			a:    Move("NXM_OF_ARP_SPA[]", ""),
+			err:  errMoveFieldZero,
+		},
+		{
+			desc:   "move field OK",
+			a:      Move("NXM_OF_ARP_SPA[]", "NXM_OF_ARP_TPA[]"),
+			action: "move:NXM_OF_ARP_SPA[]->NXM_OF_ARP_TPA[]",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			action, err := tt.a.MarshalText()
+
+			if want, got := tt.err, err; want != got {
+				t.Fatalf("unexpected error:\n- want: %v\n-  got: %v",
+					want, got)
+			}
+			if err != nil {
+				return
+			}
+
+			if want, got := tt.action, string(action); want != got {
+				t.Fatalf("unexpected Action:\n- want: %q\n-  got: %q",
+					want, got)
+			}
+		})
+	}
+}
+
 func TestActionLoadSetField(t *testing.T) {
 	var tests = []struct {
 		desc   string
@@ -635,6 +684,10 @@ func TestActionGoString(t *testing.T) {
 		{
 			a: Load("0x2", "NXM_OF_ARP_OP[]"),
 			s: `ovs.Load("0x2", "NXM_OF_ARP_OP[]")`,
+		},
+		{
+			a: Move("NXM_OF_ARP_SPA[]", "NXM_OF_ARP_TPA[]"),
+			s: `ovs.Move("NXM_OF_ARP_SPA[]", "NXM_OF_ARP_TPA[]")`,
 		},
 		{
 			a: SetField("192.168.1.1", "arp_spa"),

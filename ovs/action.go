@@ -38,6 +38,10 @@ var (
 	// both port and table value set to zero.
 	errResubmitPortTableZero = errors.New("both port and table are zero for action resubmit")
 
+	// errMoveFieldZero is returned when Move is called with src and/or dst
+	// field set to empty strings.
+	errMoveFieldZero = errors.New("src and/or dst field for action move are empty")
+
 	// errLoadSetFieldZero is returned when Load or SetField is called with value and/or
 	// field set to empty strings.
 	errLoadSetFieldZero = errors.New("value and/or field for action load or set_field are empty")
@@ -477,6 +481,35 @@ func (a *resubmitAction) MarshalText() ([]byte, error) {
 // GoString implements Action.
 func (a *resubmitAction) GoString() string {
 	return fmt.Sprintf("ovs.Resubmit(%d, %d)", a.port, a.table)
+}
+
+// Move copies the named bits from field src to field dst.
+// If either string is empty, an error is returned.
+func Move(src string, dst string) Action {
+	return &moveAction{
+		src: src,
+		dst: dst,
+	}
+}
+
+// A moveAction is an Action used by Move.
+type moveAction struct {
+	src string
+	dst string
+}
+
+// MarshalText implements Action.
+func (a *moveAction) MarshalText() ([]byte, error) {
+	if a.src == "" || a.dst == "" {
+		return nil, errMoveFieldZero
+	}
+
+	return bprintf("move:%s->%s", a.src, a.dst), nil
+}
+
+// GoString implements Action.
+func (a *moveAction) GoString() string {
+	return fmt.Sprintf("ovs.Move(%q, %q)", a.src, a.dst)
 }
 
 // SetField overwrites the specified field with the specified value.
